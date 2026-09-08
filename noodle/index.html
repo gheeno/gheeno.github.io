@@ -79,10 +79,10 @@
       </div>
 <pre class="code"><code><span class="c-tag">@web @smoke</span>
 <span class="c-key">Scenario:</span> <span class="c-txt">Valid user can log in</span>
-  <span class="c-key">Given</span> User is on <span class="c-str">"{env:SAUCEDEMO}"</span>
-  <span class="c-key">When</span> User enters <span class="c-var">{env:SAUCE_USERNAME}</span> in the username field
+  <span class="c-key">Given</span> User is on <span class="c-str">"{env:BUSTERBLOCK}"</span>
+  <span class="c-key">When</span> User enters <span class="c-var">{env:BB_USER}</span> in the username field
   <span class="c-key">And</span> User clicks the login button
-  <span class="c-key">Then</span> User should see <span class="c-str">"Products"</span></code></pre>
+  <span class="c-key">Then</span> User should see <span class="c-str">"VHS Catalog"</span></code></pre>
       <div class="term-foot">
         <span><span class="prompt">$</span> noodle run --tags @smoke</span>
         <span class="ok">1 passed</span>
