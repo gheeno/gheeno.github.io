@@ -1,0 +1,252 @@
+"""Source for the noodle app icon, favicon and hero mark.
+
+It is not part of the site — nothing links to it. It exists so every cut of
+the bowl (app icon, maskable icon, favicon, the mark on the hero's border)
+is generated from ONE pixel map instead of being redrawn by hand. Needs
+Pillow only:
+
+    python3 tools/icon.py
+
+writes
+    assets/img/icon/icon-{16,32,48,180,192,512,1024}.png   app icon, "any"
+    assets/img/icon/icon-maskable-{192,512}.png            bowl inside the
+                                                           centre 80% circle
+    assets/img/icon/icon.svg, icon-maskable.svg            vector masters
+    assets/img/favicon.svg                                 the 16-cell cut
+    assets/img/noodle-mark.svg                             hero border mark
+    assets/img/noodle-bowl-readme.svg                      the icon, steaming —
+                                                           the engine repo's
+                                                           README mark
+
+The mark is a 20 x 17 cell grid: bowl 18 wide, two steam wisps, a pair of
+chopsticks leaning out to the right. Sizes that are whole multiples of the
+canvas come out pixel-perfect; the rest are Lanczos-scaled from the 1024.
+"""
+import os
+
+from PIL import Image, ImageDraw
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+IMG = os.path.join(HERE, "..", "assets", "img")
+
+# ---- the mark: 20 wide x 17 tall, one char per cell -------------------------
+STEAM = [
+    ".....t..............",  # y0
+    ".....t....t.........",  # y1
+    "....tt....tt........",  # y2
+    "....ss...ss.........",  # y3
+    "...ss....ss.........",  # y4
+    "...SS.....ss........",  # y5
+    "....SS....SS........",  # y6
+    "....SS...SS.........",  # y7
+]
+STICKS = {                   # (light stick x, dark stick x) per row, y0..y8
+    0: (17, 19), 1: (17, 18), 2: (16, 17), 3: (16, 17), 4: (15, 16),
+    5: (15, 16), 6: (14, 15), 7: (14, 15), 8: (13, 14),
+}
+BOWL = [
+    "..NNYYWNNGGNWNNNMN..",  # y8  toppings; the chopstick tips dip in at x13,x14
+    "..NNNYNWNNNGNNWNNN..",  # y9
+    ".HHHHHHHHHHHHHHHHHr.",  # y10 lip
+    ".HRRRRRRRRRRRRRRrr..",  # y11
+    ".RRRRRRRRRRRRRRRRrr.",  # y12
+    "..RRRRRRRRRRRRRRrr..",  # y13
+    "...RRRRRRRRRRRRrr...",  # y14
+    "....DDDDDDDDDDDD....",  # y15
+    "......KKKKKKKK......",  # y16
+]
+MW = 20
+
+def build_mark():
+    rows = [list(r) for r in STEAM + BOWL]
+    for y, (lx, dx) in STICKS.items():
+        rows[y][lx] = "C"
+        rows[y][dx] = "c"
+    rows = ["".join(r) for r in rows]
+    assert all(len(r) == MW for r in rows), [len(r) for r in rows]
+    return rows
+
+# ---- the 16-cell cut for 16 and 32 px, canvas included ----------------------
+MINI = [
+    "................",
+    "................",
+    "..............Cc",
+    "....s.........Cc",
+    "...s...s.....Cc.",
+    "...S...S.....Cc.",
+    "....S..S....Cc..",
+    "...NYYWNGGNCc...",
+    "..HHHHHHHHHHHH..",
+    "..RRRRRRRRRRrr..",
+    "...RRRRRRRRrr...",
+    "....DDDDDDDD....",
+    "......KKKK......",
+    "................",
+    "................",
+    "................",
+]
+assert all(len(r) == 16 for r in MINI)
+
+# the hero bowl's own colours (assets/img/noodle-bowl-hot.svg) on the page ground
+STEAM_HEX = "#e6f7ff"
+PAL = dict(bg="#111213",
+           R="#e0492c", r="#b8341f", D="#7a2415", K="#5c1810", H="#ff9f6b",   # bowl
+           N="#fdeec2", W="#fffaf0", Y="#f2b705", G="#5c9e1e", M="#c2790a",  # noodles, egg, scallion, menma
+           C="#d9a066", c="#b07a45",                                          # chopsticks
+           S=(STEAM_HEX, .95), s=(STEAM_HEX, .7), t=(STEAM_HEX, .42))         # steam
+
+def hex2rgba(h, a=1.0):
+    h = h.lstrip("#")
+    return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), round(a * 255))
+
+def color(ch):
+    v = PAL[ch]
+    return (v, 1.0) if isinstance(v, str) else v
+
+def render(rows, canvas, ox, oy, size, bg=True):
+    """Cell edges rounded to whole pixels: exact multiples come out pixel-perfect."""
+    base = Image.new("RGBA", (size, size), hex2rgba(PAL["bg"]) if bg else (0, 0, 0, 0))
+    layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch == ".":
+                continue
+            hx, a = color(ch)
+            x0 = round((ox + x) * size / canvas)
+            x1 = round((ox + x + 1) * size / canvas)
+            y0 = round((oy + y) * size / canvas)
+            y1 = round((oy + y + 1) * size / canvas)
+            d.rectangle([x0, y0, x1 - 1, y1 - 1], fill=hex2rgba(hx, a))
+    return Image.alpha_composite(base, layer)
+
+def svg(rows, vb_w, vb_h, ox, oy, bg, label, note):
+    out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {vb_w} {vb_h}" '
+           f'shape-rendering="crispEdges" role="img" aria-label="{label}">',
+           f"  <!-- Generated by tools/icon.py — edit the pixel map there, not this file.\n       {note} -->"]
+    if bg:
+        out.append(f'  <rect width="{vb_w}" height="{vb_h}" fill="{PAL["bg"]}"/>')
+    for y, row in enumerate(rows):
+        x = 0
+        while x < len(row):
+            ch = row[x]
+            if ch == ".":
+                x += 1
+                continue
+            x2 = x
+            while x2 < len(row) and row[x2] == ch:
+                x2 += 1
+            hx, a = color(ch)
+            op = f' fill-opacity="{a}"' if a < 1 else ""
+            out.append(f'  <rect x="{x + ox}" y="{y + oy}" width="{x2 - x}" height="1" fill="{hx}"{op}/>')
+            x = x2
+    out.append("</svg>")
+    return "\n".join(out) + "\n"
+
+def write(path, text):
+    with open(path, "w") as f:
+        f.write(text)
+
+
+# ---- the animated cut: the icon, steaming ----------------------------------
+# The engine repo's README shows this one. It is the SAME bowl and the SAME
+# chopsticks as the app icon, on the same dark plate, with the static steam
+# cells lifted out and replaced by three plumes that rise. Every animation is
+# CSS inside the file, so it runs as a plain <img> with no JavaScript, and
+# prefers-reduced-motion freezes it.
+#
+# The dark plate is not decoration: GitHub renders a README on a light OR a
+# dark theme, and near-white steam on a transparent ground disappears on the
+# light one. Carrying its own ground makes the mark identical in both.
+#
+# Plume cells are (dx, dy, opacity-key) with **dy counted UP from the noodle
+# line**, so cell 0 sits on the toppings row: at rest a plume is hidden behind
+# the bowl and climbs out of it, which is what keeps the steam attached
+# instead of floating as a detached cloud.
+PLUME_L = [(0,0,"S"),(1,0,"S"),(0,1,"S"),(1,1,"S"),(1,2,"S"),(2,2,"S"),(1,3,"S"),(2,3,"s"),
+           (0,4,"s"),(1,4,"s"),(0,5,"s"),(1,5,"s"),(1,6,"s"),(2,6,"t"),(1,7,"t"),(2,7,"t"),
+           (2,8,"t"),(1,9,"t"),(1,10,"t")]
+PLUME_R = [(1,0,"S"),(2,0,"S"),(1,1,"S"),(2,1,"S"),(0,2,"S"),(1,2,"S"),(0,3,"s"),(1,3,"s"),
+           (1,4,"s"),(2,4,"s"),(1,5,"s"),(2,5,"t"),(0,6,"t"),(1,6,"t"),(1,7,"t"),
+           (0,8,"t"),(1,9,"t")]
+PLUME_M = [(0,1,"S"),(1,1,"S"),(0,2,"S"),(1,2,"s"),(1,3,"s"),(2,3,"s"),(1,4,"s"),(2,4,"t"),
+           (1,5,"t"),(2,5,"t"),(2,6,"t"),(2,7,"t")]
+# (css class, plume, x offset in cells) — three phases so one is always low
+PLUMES = (("wisp w1", PLUME_L, 3), ("wisp w3", PLUME_M, 6), ("wisp w2", PLUME_R, 9))
+
+ANIM_STYLE = """  <style>
+    @keyframes noodle-rise {
+      0%   { transform: translateY(14px); opacity: 0; }
+      18%  { opacity: 1; }
+      72%  { opacity: .85; }
+      100% { transform: translateY(-40px); opacity: 0; }
+    }
+    .wisp { animation: noodle-rise 4.2s linear infinite; }
+    .w2   { animation-duration: 5.3s; animation-delay: -2.6s; }
+    .w3   { animation-duration: 6.4s; animation-delay: -4.4s; }
+    @media (prefers-reduced-motion: reduce) { .wisp { animation: none; } }
+  </style>"""
+
+def animated_svg(mark, cell=12, canvas=24, ox=2, oy=3, width=320):
+    """The app icon with rising steam, as a self-contained animated SVG."""
+    w = canvas * cell
+    noodle = oy + 8                       # the row the toppings sit on
+    o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {w}" width="{width}" '
+         f'shape-rendering="crispEdges" role="img" '
+         f'aria-label="Noodle Test Framework \u2014 pixel-art ramen bowl, steaming hot">',
+         "  <title>Noodle Test Framework \u2014 hot pixel-art ramen bowl</title>",
+         ANIM_STYLE,
+         f'  <rect width="{w}" height="{w}" rx="{cell * 11 // 3}" fill="{PAL["bg"]}"/>']
+    for cls, plume, px in PLUMES:        # steam first, so the bowl covers its foot
+        o.append(f'  <g class="{cls}">')
+        for dx, dy, key in plume:
+            hx, a = color(key)
+            o.append(f'    <rect x="{(ox + px + dx) * cell}" y="{(noodle - dy) * cell}" '
+                     f'width="{cell}" height="{cell}" fill="{hx}" fill-opacity="{a}"/>')
+        o.append("  </g>")
+    for y, row in enumerate(mark):       # chopsticks + bowl, straight from the map
+        for x, ch in enumerate(row):
+            if ch in ".Sst":             # the static steam is what the plumes replace
+                continue
+            hx, _ = color(ch)
+            o.append(f'  <rect x="{(ox + x) * cell}" y="{(oy + y) * cell}" '
+                     f'width="{cell}" height="{cell}" fill="{hx}"/>')
+    o.append("</svg>")
+    return "\n".join(o) + "\n"
+
+
+def main():
+    mark = build_mark()
+    MH = len(mark)
+    icon_dir = os.path.join(IMG, "icon")
+    os.makedirs(icon_dir, exist_ok=True)
+    CANVAS, OX, OY = 24, 2, 3                       # bowl = 18/24 of the square
+
+    for s in (48, 192):                             # whole multiples of 24
+        render(mark, CANVAS, OX, OY, s).save(f"{icon_dir}/icon-{s}.png")
+    big = render(mark, CANVAS, OX, OY, 1024)
+    big.save(f"{icon_dir}/icon-1024.png")
+    for s in (512, 180):
+        big.resize((s, s), Image.LANCZOS).save(f"{icon_dir}/icon-{s}.png")
+    for s in (16, 32):                              # the 16-cell cut, pixel-perfect
+        render(MINI, 16, 0, 0, s).save(f"{icon_dir}/icon-{s}.png")
+    for s in (512, 192):                            # maskable: canvas 32, bowl centred
+        render(mark, 32, 6, 7, s).save(f"{icon_dir}/icon-maskable-{s}.png")
+
+    write(f"{icon_dir}/icon.svg", svg(mark, CANVAS, CANVAS, OX, OY, True,
+          "Noodle app icon: pixel-art ramen bowl with chopsticks",
+          "24-cell canvas, bowl 18 wide. Render at a multiple of 24px for whole-pixel cells."))
+    write(f"{icon_dir}/icon-maskable.svg", svg(mark, 32, 32, 6, 7, True,
+          "Noodle app icon, maskable",
+          "32-cell canvas: the bowl sits inside the centre 80% safe circle a launcher may clip to."))
+    write(os.path.join(IMG, "noodle-mark.svg"), svg(mark, MW, MH, 0, 0, False,
+          "Noodle: pixel-art ramen bowl with chopsticks",
+          "20x17 cells, no ground, for the hero's pane border. 60px wide = 3px cells."))
+    write(os.path.join(IMG, "favicon.svg"), svg(MINI, 16, 16, 0, 0, True,
+          "Noodle favicon: pixel-art ramen bowl",
+          "The 16-cell cut of the app icon, for 16 and 32 px."))
+    write(os.path.join(IMG, "noodle-bowl-readme.svg"), animated_svg(mark))
+    print("wrote", sorted(os.listdir(icon_dir)), "+ favicon.svg, noodle-mark.svg")
+
+if __name__ == "__main__":
+    main()

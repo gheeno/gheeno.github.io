@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Noodle — social card source (1200×630)</title>
+
+<!--
+  Source for assets/img/og-cover.png.
+
+  It is not part of the site — nothing links to it. It exists so the social
+  card can be re-exported from the same stylesheet the hero uses, instead of
+  being redrawn by hand every time the hero changes. Serve the repo and render
+  this page at exactly 1200×630:
+
+    python3 -m http.server 8000
+    chrome --headless --force-prefers-reduced-motion \
+           --window-size=1200,630 --screenshot=assets/img/og-cover.png \
+           http://127.0.0.1:8000/tools/og-card.html
+
+  --force-prefers-reduced-motion matters: it freezes the steam and holds the
+  cursor solid, so the export is deterministic rather than whatever frame the
+  screenshot happened to catch.
+-->
+
+<link rel="stylesheet" href="../assets/css/styles.css">
+<style>
+  /* The card is a fixed 1200×630 plate, not a responsive page: one pane,
+     bowl on the left, copy on the right, the vw-based clamps pinned to
+     card-sized values. Everything else is inherited from styles.css. */
+
+  html, body {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+  }
+
+  body { position: relative; }
+
+  .og {
+    position: absolute;
+    inset: 32px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    align-items: center;
+    gap: 44px;
+    padding: 0 64px 0 48px;
+    border: 1px solid var(--line-2);
+  }
+
+  .og .pane-title {
+    left: 24px;
+    padding: 0 10px;
+    font-size: 16px;
+  }
+
+  .og .logo-stage {
+    width: 340px;
+    margin: 0 auto;
+  }
+
+  .og-copy { text-align: left; }
+
+  .og-copy .kicker { margin: 0 0 8px; font-size: 17px; }
+
+  .og-copy .wordmark { margin: 0 0 18px; font-size: 92px; }
+
+  .og-copy .tagline {
+    max-width: 600px;
+    margin: 0 0 26px;
+    font-size: 27px;
+    line-height: 1.4;
+  }
+
+  .og-run {
+    display: flex;
+    gap: 22px;
+    margin: 0;
+    font-size: 19px;
+    color: var(--fg-2);
+  }
+</style>
+</head>
+<body>
+
+<div class="og">
+  <p class="pane-title">~/noodle</p>
+
+  <div class="logo-stage">
+    <img class="logo" src="../assets/img/noodle-bowl-hot.svg"
+         alt="" width="288" height="216">
+  </div>
+
+  <div class="og-copy">
+    <p class="kicker">test framework <span class="sep">//</span> v8.19.3-alpha</p>
+
+    <h1 class="wordmark">noodle<span class="cursor" aria-hidden="true"></span></h1>
+
+    <p class="tagline">
+      A capability for <b>AI</b> and <b>humans</b> to generate
+      <b class="hot">deterministic tests</b> using plain&nbsp;English&nbsp;BDD.
+    </p>
+
+    <p class="og-run">
+      <span><span class="prompt">$</span> noodle run --tags @smoke</span>
+      <span class="ok">1 passed</span>
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

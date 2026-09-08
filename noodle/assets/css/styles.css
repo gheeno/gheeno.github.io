@@ -1,0 +1,574 @@
+/* ==========================================================================
+   Noodle — landing page
+   Terminal-first. A flat dark-grey page, one monospace face, thin-bordered
+   panes with their title sitting on the border, and a pixel-art bowl that
+   holds still. Colour is rationed: a neutral grey ramp, the bowl's own
+   terracotta for the one thing you should click, and a sage for "passed".
+   ========================================================================== */
+
+/* --- self-hosted font (SIL Open Font License, see assets/fonts/README.md) --- */
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../fonts/jetbrains-mono-400-700.woff2') format('woff2');
+  font-weight: 400 700;               /* one variable file covers the range */
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* the grey ramp — neutral, no tint */
+  --bg:      #111213;
+  --bg-1:    #17191b;                 /* code blocks, callouts */
+  --bg-2:    #1e2124;                 /* title bars, hover */
+  --line:    #2b2f33;                 /* pane borders, rules */
+  --line-2:  #3a3f45;                 /* stronger border, separators */
+  --fg-3:    #6e757c;                 /* comments, chrome */
+  --fg-2:    #9ca3aa;                 /* dim copy */
+  --fg:      #d6dadd;                 /* body */
+  --fg-1:    #f4f5f6;                 /* headings, emphasis */
+
+  /* the two non-greys */
+  --accent:  #e8653f;                 /* the bowl's terracotta, lifted for a dark ground */
+  --accent-hi: #f07a55;
+  --ok:      #8fbf8a;                 /* "passed" */
+
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo,
+          'DejaVu Sans Mono', Consolas, monospace;
+
+  --page-w: 880px;
+  --pad:    clamp(16px, 4vw, 28px);
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--accent); color: var(--bg); }
+
+a { color: inherit; text-decoration: none; }
+
+/* inline code in copy */
+code {
+  padding: 1px 5px;
+  font-family: inherit;
+  font-size: .92em;
+  color: var(--fg-1);
+  background: var(--bg-2);
+  border-radius: 2px;
+}
+
+/* …but not inside a terminal block, where the whole <pre> is the code */
+pre code {
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border-radius: 0;
+}
+
+/* ==========================================================================
+   1. Top bar — a status line that stays put
+   ========================================================================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px var(--pad);
+  background: rgba(17, 18, 19, .92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--fg-1);
+}
+
+.brand-prompt { font-weight: 400; color: var(--accent); }
+
+.topnav {
+  display: flex;
+  gap: clamp(14px, 3vw, 28px);
+}
+
+.topnav a {
+  padding: 2px 0;
+  color: var(--fg-2);
+  border-bottom: 1px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+
+.topnav a:hover {
+  color: var(--fg-1);
+  border-bottom-color: var(--fg-1);
+}
+
+/* ==========================================================================
+   2. Panes — the page is a column of bordered boxes, each titled on its
+      border the way a TUI names a window
+   ========================================================================== */
+
+main {
+  display: grid;
+  gap: clamp(32px, 6vw, 56px);
+  max-width: var(--page-w);
+  margin: 0 auto;
+  padding: clamp(36px, 6vw, 56px) var(--pad) 48px;   /* floor clears the hero mark
+                                                        under the sticky top bar */
+}
+
+.pane {
+  position: relative;
+  min-width: 0;                       /* a grid item; without this a long code
+                                         line widens the pane instead of
+                                         scrolling inside the block */
+  border: 1px solid var(--line);
+  padding: clamp(28px, 5vw, 40px) var(--pad) clamp(24px, 4vw, 32px);
+}
+
+.pane-title {
+  position: absolute;
+  top: 0;
+  left: 18px;
+  margin: 0;
+  padding: 0 8px;
+  transform: translateY(-50%);
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: .06em;
+  color: var(--fg-2);
+}
+
+/* a comment line: the note under a pane's content */
+.cm {
+  margin: 0;
+  font-size: .95rem;
+  color: var(--fg-2);
+}
+
+.cm::before { content: '# '; color: var(--fg-3); }
+
+.cm code { color: var(--fg-1); }
+
+/* ==========================================================================
+   3. Hero
+   ========================================================================== */
+
+.hero {
+  text-align: center;
+  padding-top: clamp(40px, 7vw, 64px);
+}
+
+/* --- the bowl: small, on the border, where a pane title goes ------------- */
+
+.pane-mark {
+  padding: 0 6px;
+  line-height: 0;                     /* no text baseline under the image */
+  letter-spacing: 0;
+}
+
+.pane-mark img {
+  display: block;
+  width: 60px;                        /* 20-cell grid: 3px cells, whole pixels */
+  height: auto;
+}
+
+/* --- the big bowl: kept for the social card (tools/og-card.html) --------- */
+
+.logo-stage {
+  width: min(288px, 62vw);
+  margin: 0 auto clamp(20px, 4vw, 32px);
+}
+
+.logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .55));
+}
+
+/* --- wordmark ------------------------------------------------------------ */
+
+.kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--fg-3);
+}
+
+.kicker .sep { margin: 0 .4em; color: var(--line-2); }
+
+.wordmark {
+  margin: 0 0 18px;
+  font-size: clamp(2.4rem, 8vw, 4.4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+  color: var(--fg-1);
+}
+
+/* the block cursor after the wordmark — the one thing on the page that blinks */
+.cursor {
+  display: inline-block;
+  width: .5em;
+  height: .9em;
+  margin-left: .1em;
+  vertical-align: -.06em;
+  background: var(--accent);
+  animation: blink 1.1s steps(1, end) infinite;
+}
+
+@keyframes blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.tagline {
+  max-width: 40ch;
+  margin: 0 auto 10px;
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--fg);
+}
+
+.tagline b { font-weight: 700; color: var(--fg-1); }
+.tagline .hot { color: var(--accent); }
+
+.subtagline {
+  max-width: 52ch;
+  margin: 0 auto 28px;
+  font-size: .95rem;
+  color: var(--fg-2);
+}
+
+/* --- buttons: [ bracketed ] ---------------------------------------------- */
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: clamp(32px, 5vw, 44px);
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--fg-1);
+  background: transparent;
+  border: 1px solid var(--line-2);
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.btn::before { content: '[ '; color: var(--fg-3); }
+.btn::after  { content: ' ]'; color: var(--fg-3); }
+
+.btn-cool:hover {
+  background: var(--bg-1);
+  border-color: var(--fg-2);
+}
+
+/* the one filled control on the page */
+.btn-hot {
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-hot::before,
+.btn-hot::after { color: rgba(17, 18, 19, .55); }
+
+.btn-hot:hover {
+  background: var(--accent-hi);
+  border-color: var(--accent-hi);
+}
+
+/* --- terminal block ------------------------------------------------------ */
+
+.term {
+  min-width: 0;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--bg-1);
+}
+
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+  font-size: 12px;
+  color: var(--fg-2);
+}
+
+.term-file { font-weight: 500; color: var(--fg); }
+
+.term-kind {
+  margin-left: auto;
+  letter-spacing: .06em;
+  color: var(--fg-3);
+}
+
+.code {
+  margin: 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: inherit;
+  font-size: clamp(12px, 2.2vw, 13.5px);
+  line-height: 1.75;
+  color: var(--fg);
+}
+
+.c-tag { color: var(--fg-3); }
+.c-key { font-weight: 700; color: var(--fg-1); }
+.c-str { color: var(--ok); }
+.c-var { color: var(--accent); }
+.c-txt { color: var(--fg); }
+.c-cm  { font-style: italic; color: var(--fg-3); }
+
+.term-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.prompt { color: var(--accent); }
+
+.ok { font-weight: 500; color: var(--ok); }
+.ok::before { content: '\2713  '; }
+
+/* the copy control in the install block's title bar */
+.copy-btn {
+  margin-left: 12px;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: var(--fg-2);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color .15s;
+}
+
+.copy-btn::before { content: '[ '; color: var(--fg-3); }
+.copy-btn::after  { content: ' ]'; color: var(--fg-3); }
+
+.copy-btn:hover { color: var(--fg-1); }
+
+.copy-btn.is-copied { color: var(--ok); }
+
+/* ==========================================================================
+   4. What — three panes side by side
+   ========================================================================== */
+
+.strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.strip .pane { padding: 26px 22px 22px; }
+
+.strip p {
+  margin: 0;
+  font-size: .95rem;
+  color: var(--fg-2);
+}
+
+/* ==========================================================================
+   5. Woks — a listing, one row per work area
+   ========================================================================== */
+
+.wok-list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.wok-list li {
+  display: flex;
+  gap: 16px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.wok-list li:first-child { border-top: 1px dashed var(--line); }
+
+.wok-name {
+  flex: 0 0 13ch;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+
+/* Every wok ships. Four of them carry a note narrowing what the wok covers —
+   how far it has been verified in the wild, or which backends it speaks to —
+   so the limit is stated rather than the wok hidden. */
+.wok-note { color: var(--fg-3); }
+
+/* ==========================================================================
+   6. Install + docs
+   ========================================================================== */
+
+/* The access notice is the one line on this section that must never be
+   missed, so it gets a callout with the accent on its edge. */
+.gate {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  font-size: .95rem;
+  color: var(--fg);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+}
+
+.gate b { color: var(--fg-1); }
+
+.gate a,
+.cm a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(232, 101, 63, .45);
+}
+
+.gate a:hover,
+.cm a:hover { text-decoration-color: var(--accent); }
+
+.install .term { max-width: none; margin-bottom: 18px; }
+
+.docs-intro {
+  margin: 0 0 14px;
+  font-size: .95rem;
+  color: var(--fg-2);
+}
+
+.docs-list {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px dashed var(--line);
+}
+
+.docs-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: .95rem;
+  color: var(--fg-2);
+}
+
+.docs-list b {
+  flex: 0 0 auto;
+  min-width: 18ch;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+
+.docs-list span { flex: 1 1 24ch; }
+
+/* ==========================================================================
+   7. Footer — the status line at the bottom
+   ========================================================================== */
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: center;
+  max-width: var(--page-w);
+  margin: 0 auto;
+  padding: 22px var(--pad) 44px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  letter-spacing: .03em;
+  color: var(--fg-3);
+}
+
+.footer .sep { color: var(--line-2); }
+
+.footer a {
+  color: var(--fg-2);
+  border-bottom: 1px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+
+.footer a:hover {
+  color: var(--fg-1);
+  border-bottom-color: var(--fg-1);
+}
+
+/* ==========================================================================
+   8. Focus
+   Keyboard focus gets its own ring rather than the UA default, and only on
+   :focus-visible so a mouse click leaves nothing behind.
+   ========================================================================== */
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.btn-hot:focus-visible { outline-color: var(--fg-1); }
+
+/* ==========================================================================
+   9. Motion / small screens
+   ========================================================================== */
+
+@media (max-width: 560px) {
+  .topbar { font-size: 12px; }
+  .topnav { gap: 12px; }
+  .wok-list li { flex-wrap: wrap; gap: 2px 12px; }
+  .wok-name { flex-basis: 100%; }
+  .docs-list b { flex-basis: 100%; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .cursor { animation: none; }
+}

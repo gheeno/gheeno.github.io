@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noodle — deterministic tests in plain English</title>
+<meta name="description" content="Noodle test framework — a capability for AI and humans to generate deterministic tests using plain English BDD.">
+<meta name="theme-color" content="#111213">
+
+<meta property="og:title" content="Noodle — deterministic tests in plain English">
+<meta property="og:description" content="A capability for AI and humans to generate deterministic tests using plain English BDD.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gheeno.github.io/noodle/">
+<meta property="og:image" content="https://gheeno.github.io/noodle/assets/img/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Noodle — a pixel-art bowl of ramen in a terminal window">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/icon/icon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/icon/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="assets/fonts/jetbrains-mono-400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#top">
+    <span class="brand-prompt">$</span>
+    <span class="brand-name">noodle</span>
+  </a>
+  <nav class="topnav">
+    <a href="#what">what</a>
+    <a href="#woks">woks</a>
+    <a href="#docs">docs</a>
+    <a href="#install">install</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <section class="pane hero">
+    <!-- The bowl sits on the pane border where the other panes carry their
+         title, so the hero says "noodle" once: in the wordmark. -->
+    <p class="pane-title pane-mark">
+      <img src="assets/img/noodle-mark.svg"
+           alt="Noodle: a pixel-art ramen bowl with chopsticks"
+           width="20" height="17">
+    </p>
+
+    <!-- Tracks the latest release tag (`git tag --sort=-v:refname | head -1`),
+         not main. The README tells pilot testers to pin to a tag, so main's
+         version is never the one anyone is actually running. -->
+    <p class="kicker">test framework <span class="sep">//</span> v8.19.3-alpha</p>
+
+    <h1 class="wordmark">noodle<span class="cursor" aria-hidden="true"></span></h1>
+
+    <p class="tagline">
+      A capability for <b>AI</b> and <b>humans</b> to generate
+      <b class="hot">deterministic tests</b> using plain&nbsp;English&nbsp;BDD.
+    </p>
+
+    <p class="subtagline">
+      No selectors. No page objects. No step definitions. No code.
+      Tell Noodle what to test &mdash; it writes the noodles, so you don't have to.
+    </p>
+
+    <div class="cta-row">
+      <a class="btn btn-hot" href="#install">get noodle</a>
+      <a class="btn btn-cool" href="#what">see how it works</a>
+    </div>
+
+    <div class="term">
+      <div class="term-bar">
+        <span class="term-file">login.feature</span>
+        <span class="term-kind">gherkin</span>
+      </div>
+<pre class="code"><code><span class="c-tag">@web @smoke</span>
+<span class="c-key">Scenario:</span> <span class="c-txt">Valid user can log in</span>
+  <span class="c-key">Given</span> User is on <span class="c-str">"{env:SAUCEDEMO}"</span>
+  <span class="c-key">When</span> User enters <span class="c-var">{env:SAUCE_USERNAME}</span> in the username field
+  <span class="c-key">And</span> User clicks the login button
+  <span class="c-key">Then</span> User should see <span class="c-str">"Products"</span></code></pre>
+      <div class="term-foot">
+        <span><span class="prompt">$</span> noodle run --tags @smoke</span>
+        <span class="ok">1 passed</span>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="strip" id="what">
+    <article class="pane">
+      <h2 class="pane-title">plain english in</h2>
+      <p>Write the scenario the way you'd say it out loud. Noodle resolves the
+      selectors, the waits and the page objects for you.</p>
+    </article>
+    <article class="pane">
+      <h2 class="pane-title">deterministic out</h2>
+      <p>The same feature file runs the same way every time &mdash; local, CI,
+      headed or headless. Generation is assisted; execution is not a guess.</p>
+    </article>
+    <article class="pane">
+      <h2 class="pane-title">ai + human native</h2>
+      <p>A tester and an agent write the exact same artefact. One language,
+      one runner, one report &mdash; no translation layer between them.</p>
+    </article>
+  </section>
+
+  <section class="pane woks" id="woks">
+    <h2 class="pane-title">woks</h2>
+    <ul class="wok-list">
+      <li><span class="wok-name">web</span></li>
+      <li><span class="wok-name">api</span></li>
+      <li><span class="wok-name">messaging</span> <span class="wok-note">kafka &middot; rabbitmq &middot; pulsar</span></li>
+      <li><span class="wok-name">data</span> <span class="wok-note">sqlite verified</span></li>
+      <li><span class="wok-name">mobile</span> <span class="wok-note">android verified</span></li>
+      <li><span class="wok-name">desktop</span> <span class="wok-note">macos verified</span></li>
+      <li><span class="wok-name">performance</span></li>
+    </ul>
+    <p class="cm">Noodle is a universal test framework &mdash; no wok is a sub-mode of another.</p>
+  </section>
+
+  <section class="pane install" id="install">
+    <h2 class="pane-title">install</h2>
+
+    <p class="gate">
+      Noodle is in <b>private alpha</b> &mdash; the repository is invite-only.
+      For access, contact
+      <a href="mailto:gino.sanpascual@gmail.com">gino.sanpascual@gmail.com</a>.
+    </p>
+
+    <div class="term">
+      <div class="term-bar">
+        <span class="term-file">install.sh</span>
+        <span class="term-kind">macos</span>
+        <button class="copy-btn" type="button" data-copy="#install-cmd">copy</button>
+      </div>
+<pre class="code" id="install-cmd"><code><span class="c-cm"># macOS &mdash; the Windows 11 and Linux paths ship in the README</span>
+curl -LsSf https://astral.sh/uv/install.sh | sh
+git clone https://github.com/gheeno/noodle.git &amp;&amp; cd noodle
+git checkout 8.19.3-alpha  <span class="c-cm"># pin to a release &mdash; main moves several times a day</span>
+uv venv &amp;&amp; uv tool install --editable <span class="c-str">".[all]"</span> --with-executables-from playwright
+playwright install chromium
+noodle doctor</code></pre>
+      <div class="term-foot">
+        <span><span class="prompt">$</span> noodle doctor</span>
+        <span class="ok">engine ready</span>
+      </div>
+    </div>
+
+    <p class="cm">
+      Installed once, like <code>git</code> &mdash; your tests live in their own
+      workspace, never inside the clone.
+    </p>
+  </section>
+
+  <section class="pane docs" id="docs">
+    <h2 class="pane-title">docs</h2>
+    <p class="docs-intro">
+      59 documents ride along inside the framework. The ones you'd open first:
+    </p>
+
+    <ul class="docs-list">
+      <li><b>quickstart.md</b> <span>Install to one passing test, in about thirty minutes.</span></li>
+      <li><b>manual.md</b> <span>The full manual &mdash; setup, writing tests, RCA, syntax, CI.</span></li>
+      <li><b>cli-reference.md</b> <span>Every <code>noodle</code> command and flag, with sample output.</span></li>
+      <li><b>woks.md</b> <span>The seven work areas, and the tags that route a scenario to one.</span></li>
+      <li><b>steps_dictionary.md</b> <span>Every built-in step pattern, with its phrasings and examples.</span></li>
+      <li><b>mcp-guide.md</b> <span>Drive Noodle from an AI agent over MCP, or over plain HTTP.</span></li>
+    </ul>
+
+    <p class="cm">
+      &hellip;and fifty-three more, all in <code>docs/</code> &mdash; readable
+      the moment you have access.
+    </p>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <span>noodle test framework</span>
+  <span class="sep">&bull;</span>
+  <span>no flakes // just noodles</span>
+  <span class="sep">&bull;</span>
+  <a href="#docs">docs</a>
+  <span class="sep">&bull;</span>
+  <a href="#install">install</a>
+  <span class="sep">&bull;</span>
+  <a href="mailto:gino.sanpascual@gmail.com">contact</a>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
